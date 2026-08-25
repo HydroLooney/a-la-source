@@ -93,27 +93,22 @@
   color: #2d2d2d;
 }
 
-/* Card grid — no scroll, adapts to viewport */
+/* Vignettes IDENTIQUES au corpus « sources sélectionnées » : meme grille, memes
+   cartes SourceCard (images toutes de meme taille). Aucune surcharge de carte.
+   On ajoute seulement le defilement si le corpus depasse la fenetre, car la
+   projection est en plein ecran fixe. */
 .projection-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 1.25rem;
   width: 100%;
   max-width: 75rem;
-  max-height: calc(100vh - 180px);
-  overflow: hidden;
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+  align-content: start;
+  padding: 0.25rem;
 }
-.projection-grid:has(> :nth-child(2):last-child) {
-  grid-template-columns: repeat(2, 1fr);
-  max-width: 56.25rem;
-}
-.projection-grid:has(> :nth-child(3):last-child) {
-  grid-template-columns: repeat(3, 1fr);
-  max-width: 68.75rem;
-}
-.projection-grid:has(> :nth-child(5)) {
-  grid-template-columns: repeat(3, 1fr);
-}
+.projection-grid .source-card { cursor: pointer; }
 
 /* Neutral card (no score, no mechanism — just title + accroche + duration) */
 .projection-card--light {

@@ -33,9 +33,12 @@ interface Props {
   atelierBadges?: AtelierBadge[]
   /* Contexte atelier/projection : carte nue, on masque l'attribution pour ne pas biaiser. */
   hideAttribution?: boolean
+  /* Projection : au lieu de naviguer vers /lire, le clic sur l'image ou le titre
+     déclenche ce callback (ouverture de la lecture en plein écran). */
+  onOpen?: (source: Source) => void
 }
 
-export default function SourceCard({ source, score, facettes, showFraicheur, action, atelierBadges, hideAttribution }: Props) {
+export default function SourceCard({ source, score, facettes, showFraicheur, action, atelierBadges, hideAttribution, onOpen }: Props) {
   const imgSrc = source.image_url || (source as unknown as Record<string, unknown>).og_image as string | undefined
   const hasArchive = !!source.has_archive
   const isPaywall = source.paywall === 1
@@ -52,11 +55,19 @@ export default function SourceCard({ source, score, facettes, showFraicheur, act
       {/* « La source est une carte qu'on promène » : l'image est toujours
           présente. À défaut d'illustration, un placeholder sobre (initiale du
           média), dark-safe. */}
-      <Link to={`/lire/${source.id}`} className="source-card-image" aria-hidden="true" tabIndex={-1}>
-        {imgSrc
-          ? <img src={imgSrc} alt="" loading="lazy" />
-          : <span className="source-card-image-fallback">{(source.media_nom || source.titre || '?').charAt(0)}</span>}
-      </Link>
+      {onOpen ? (
+        <button type="button" className="source-card-image source-card-image--btn" onClick={() => onOpen(source)} aria-hidden="true" tabIndex={-1}>
+          {imgSrc
+            ? <img src={imgSrc} alt="" loading="lazy" />
+            : <span className="source-card-image-fallback">{(source.media_nom || source.titre || '?').charAt(0)}</span>}
+        </button>
+      ) : (
+        <Link to={`/lire/${source.id}`} className="source-card-image" aria-hidden="true" tabIndex={-1}>
+          {imgSrc
+            ? <img src={imgSrc} alt="" loading="lazy" />
+            : <span className="source-card-image-fallback">{(source.media_nom || source.titre || '?').charAt(0)}</span>}
+        </Link>
+      )}
 
       {score && (
         <div className="source-card-score-overlay">
@@ -77,7 +88,11 @@ export default function SourceCard({ source, score, facettes, showFraicheur, act
       )}
 
       <div className="source-card-body">
-        <Link to={`/lire/${source.id}`} className="source-card-title">{source.titre}</Link>
+        {onOpen ? (
+          <button type="button" className="source-card-title source-card-title--btn" onClick={() => onOpen(source)}>{source.titre}</button>
+        ) : (
+          <Link to={`/lire/${source.id}`} className="source-card-title">{source.titre}</Link>
+        )}
         <div className="source-card-meta">
           {source.media_nom && <span className="source-card-media">{source.media_nom}</span>}
           {source.type_source && <span className="source-card-type">{source.type_source}</span>}

@@ -1,18 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import ReactMarkdown from 'react-markdown'
 import { api } from '../api/client'
-import type { AtelierDetail, MecanismeReference } from '../types'
-
-interface SourceProjection {
-  id: number
-  titre: string
-  accroche: string | null
-  image_url: string | null
-  media_nom: string | null
-  type_source: string | null
-  date_publication: string | null
-  duree_minutes: number | null
-}
+import SourceCard from '../components/cards/SourceCard'
+import type { AtelierDetail, MecanismeReference, Source } from '../types'
 
 interface ArchiveData {
   contenu: string | null
@@ -26,8 +17,9 @@ export default function Projection() {
   const navigate = useNavigate()
   const [atelier, setAtelier] = useState<AtelierDetail | null>(null)
   const [phase, setPhase] = useState<Phase>('shortlist')
-  const [sourceChoisie, setSourceChoisie] = useState<SourceProjection | null>(null)
+  const [sourceChoisie, setSourceChoisie] = useState<Source | null>(null)
   const [archiveContent, setArchiveContent] = useState<string | null>(null)
+  const [archiveType, setArchiveType] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   // Synthese state
@@ -73,14 +65,16 @@ export default function Projection() {
   }
 
   // Choose source for reading
-  const choisirSource = async (source: SourceProjection) => {
+  const choisirSource = async (source: Source) => {
     setSourceChoisie(source)
     // Load archive content
     try {
       const detail = await api.get<{ archive: ArchiveData | null }>(`/sources/${source.id}`)
       setArchiveContent(detail.archive?.contenu || null)
+      setArchiveType(detail.archive?.type || null)
     } catch {
       setArchiveContent(null)
+      setArchiveType(null)
     }
     setPhase('lecture')
   }
@@ -89,6 +83,7 @@ export default function Projection() {
     setPhase('shortlist')
     setSourceChoisie(null)
     setArchiveContent(null)
+    setArchiveType(null)
   }
 
   const allerSynthese = () => {
@@ -139,16 +134,7 @@ export default function Projection() {
     )
   }
 
-  const sources: SourceProjection[] = atelier.sources.map(s => ({
-    id: s.id,
-    titre: s.titre,
-    accroche: s.accroche,
-    image_url: s.image_url,
-    media_nom: s.media_nom || null,
-    type_source: s.type_source,
-    date_publication: s.date_publication,
-    duree_minutes: s.duree_minutes,
-  }))
+  const sources: Source[] = atelier.sources
 
   return (
     <div className="projection projection--light">
@@ -192,29 +178,7 @@ export default function Projection() {
           </h2>
           <div className="projection-grid">
             {sources.map((s) => (
-              <button
-                key={s.id}
-                className="projection-card projection-card--light"
-                onClick={() => choisirSource(s)}
-                type="button"
-              >
-                {s.image_url && (
-                  <div className="projection-card-img">
-                    <img src={s.image_url} alt="" loading="lazy" />
-                  </div>
-                )}
-                <div className="projection-card-body">
-                  <h3 className="projection-card-titre">{s.titre}</h3>
-                  {s.accroche && (
-                    <p className="projection-card-accroche">
-                      {s.accroche.length > 120 ? s.accroche.substring(0, 120) + '...' : s.accroche}
-                    </p>
-                  )}
-                  <span className="projection-card-meta">
-                    {s.duree_minutes ? `${s.duree_minutes} min` : ''}
-                  </span>
-                </div>
-              </button>
+              <SourceCard key={s.id} source={s} hideAttribution onOpen={choisirSource} />
             ))}
           </div>
         </div>
@@ -235,10 +199,16 @@ export default function Projection() {
             </header>
 
             {archiveContent ? (
-              <div
-                className="projection-reader-body"
-                dangerouslySetInnerHTML={{ __html: archiveContent }}
-              />
+              archiveType === 'markdown' ? (
+                <div className="projection-reader-body">
+                  <ReactMarkdown>{archiveContent}</ReactMarkdown>
+                </div>
+              ) : (
+                <div
+                  className="projection-reader-body"
+                  dangerouslySetInnerHTML={{ __html: archiveContent }}
+                />
+              )
             ) : (
               <div className="projection-reader-fallback">
                 {sourceChoisie.accroche && <p className="projection-reader-accroche">{sourceChoisie.accroche}</p>}

@@ -387,3 +387,98 @@
   font-weight: 600;
   color: var(--rc-vert);
 }
+
+/* ===========================================================================
+ * Vue « en cours » : grille de tuiles d'ateliers cliquables vers /atelier/:id.
+ * =========================================================================== */
+.atelier-tuiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  gap: var(--space-lg);
+  margin-top: var(--space-md);
+}
+.atelier-tuile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--color-text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.atelier-tuile:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+.atelier-tuile-tete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+.atelier-tuile-num {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.atelier-tuile-apercus {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.atelier-tuile-apercus img {
+  width: 100%;
+  height: 3.5rem;
+  object-fit: cover;
+  display: block;
+}
+.atelier-tuile-faits {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+}
+.atelier-tuile-faits > div {
+  display: flex;
+  gap: var(--space-xs);
+  font-size: 0.85rem;
+}
+.atelier-tuile-faits dt {
+  color: var(--color-text-secondary);
+  min-width: 4.5rem;
+}
+.atelier-tuile-faits dd {
+  margin: 0;
+  color: var(--color-text);
+  font-weight: 500;
+}
+.atelier-tuile-ouvrir {
+  margin-top: auto;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+/* Page atelier dédiée : lien retour vers la liste. */
+.atelier-fiche-retour {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+.atelier-fiche-retour:hover {
+  color: var(--color-primary);
+  text-decoration: none;
+}

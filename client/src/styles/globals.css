@@ -196,11 +196,15 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
   font-size: 0.85rem; font-weight: 500;
   transition: background 0.15s, color 0.15s;
 }
-.nav-link:hover { background: rgba(255,255,255,0.14); color: white; text-decoration: none; }
+/* La barre de nav est sombre : un lien VISITÉ ne doit jamais passer en bordeaux
+   (a:visited global) sinon rouge sombre sur noir, illisible (Observatoire,
+   Apprendre...). On force la couleur claire quel que soit l'état visité. */
+.nav-link:visited { color: rgba(255,255,255,0.82); }
+.nav-link:hover, .nav-link:visited:hover { background: rgba(255,255,255,0.14); color: white; text-decoration: none; }
 /* La barre de nav est toujours sombre (clair ET sombre). L'actif est donc une
    pastille CLAIRE a texte rouge de marque : contraste fort, JAMAIS de rouge sur
    noir. Les inactifs sont en blanc lisible. */
-.nav-link.active { background: #fff; color: var(--rc-crimson); font-weight: 700; }
+.nav-link.active, .nav-link.active:visited { background: #fff; color: var(--rc-crimson); font-weight: 700; }
 .nav-link.active:hover { background: #fff; color: var(--rc-crimson); text-decoration: none; }
 /* En sombre, .dark a teinte tous les liens en rouge : on restaure des couleurs neutres */
 .dark .nav-link { color: rgba(255,255,255,0.82); }
@@ -300,6 +304,19 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 }
 .source-card-body { padding: var(--space-md); display: flex; flex-direction: column; gap: var(--space-xs); }
 .source-card-title { font-size: 0.95rem; font-weight: 600; line-height: 1.3; }
+/* Variante bouton (projection) : identique aux liens mais sans navigation.
+   Le clic appelle onOpen (ouverture de la lecture plein écran). */
+button.source-card-image--btn {
+  border: none; padding: 0; margin: 0; width: 100%; font: inherit; cursor: pointer;
+  background: var(--rc-gris-100);
+}
+button.source-card-title--btn {
+  border: none; background: none; padding: 0; margin: 0;
+  font-family: inherit; font-size: 0.95rem; font-weight: 600; line-height: 1.3;
+  color: var(--color-accent); text-align: left; cursor: pointer;
+  transition: color 0.15s ease;
+}
+button.source-card-title--btn:hover { color: var(--rc-bordeaux); text-decoration: underline; }
 .source-card-meta { display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap; }
 .source-card-media { font-size: 0.8rem; color: var(--color-text-secondary); font-weight: 500; }
 .source-card-type { font-size: 0.75rem; color: var(--color-text-secondary); }

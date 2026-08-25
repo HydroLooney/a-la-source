@@ -10,6 +10,7 @@ const Inbox = lazy(() => import('./pages/Inbox'))
 const Lire = lazy(() => import('./pages/Lire'))
 const Observatoire = lazy(() => import('./pages/Observatoire'))
 const Ateliers = lazy(() => import('./pages/Ateliers'))
+const AtelierFiche = lazy(() => import('./pages/AtelierFiche'))
 const Archiver = lazy(() => import('./pages/Archiver'))
 // BecsRouges: route redirects to /perso/chaines, component kept but not lazy-loaded
 const MonEspace = lazy(() => import('./pages/MonEspace'))
@@ -59,6 +60,7 @@ export default function App() {
             <Route path="/arpentages/:id" element={<Arpentage />} />
             <Route path="/ateliers" element={<Ateliers />} />
             <Route path="/ateliers/:section" element={<Ateliers />} />
+            <Route path="/atelier/:id" element={<AtelierFiche />} />
             <Route path="/archiver" element={<Archiver />} />
             <Route path="/archiver/:section" element={<Archiver />} />
             <Route path="/becs-rouges" element={<Navigate to="/perso/chaines" replace />} />

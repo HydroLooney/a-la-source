@@ -121,9 +121,6 @@ export default function Ateliers() {
   // Atelier actuellement en preparation (s'il y en a plusieurs, on choisit lequel).
   const [prepAtelierId, setPrepAtelierId] = useState<number | null>(null)
 
-  // Atelier actuellement piloté dans la sous-vue « en cours » (sélection indépendante).
-  const [pilotAtelierId, setPilotAtelierId] = useState<number | null>(null)
-
   /* ---------- Fetch ---------- */
 
   const fetchData = useCallback(async () => {
@@ -154,16 +151,6 @@ export default function Ateliers() {
     const stillThere = ateliersActifs.some(a => a.id === prepAtelierId)
     if (!stillThere) setPrepAtelierId(ateliersActifs[0].id)
   }, [ateliersActifs, prepAtelierId])
-
-  // Idem pour l'atelier piloté en sous-vue « en cours ».
-  useEffect(() => {
-    if (ateliersActifs.length === 0) {
-      if (pilotAtelierId !== null) setPilotAtelierId(null)
-      return
-    }
-    const stillThere = ateliersActifs.some(a => a.id === pilotAtelierId)
-    if (!stillThere) setPilotAtelierId(ateliersActifs[0].id)
-  }, [ateliersActifs, pilotAtelierId])
 
   /* ---------- Filtres vivier ---------- */
 
@@ -208,21 +195,6 @@ export default function Ateliers() {
 
   const sauvegarderAtelier = async (atelier: AtelierDetail, fields: Record<string, unknown>) => {
     await api.patch(`/ateliers/${atelier.id}`, fields)
-    await fetchData()
-  }
-
-  const changerStatut = async (atelierId: number, statut: string) => {
-    await api.patch(`/ateliers/${atelierId}`, { statut })
-    await fetchData()
-  }
-
-  const terminerAtelier = async (atelierId: number) => {
-    await api.patch(`/ateliers/${atelierId}`, { statut: 'termine' })
-    await fetchData()
-  }
-
-  const enregistrerSynthese = async (atelierId: number, fields: Record<string, unknown>) => {
-    await api.post(`/ateliers/${atelierId}/synthese`, fields)
     await fetchData()
   }
 
@@ -374,15 +346,7 @@ export default function Ateliers() {
 
       {/* ===== EN COURS ===== */}
       {section === 'en-cours' && (
-        <EnCoursTableau
-          ateliers={ateliersActifs}
-          pilotAtelierId={pilotAtelierId}
-          isFacilitateur={isFacilitateur}
-          onChangeAtelier={setPilotAtelierId}
-          onChangeStatut={changerStatut}
-          onSaveSynthese={enregistrerSynthese}
-          onTerminer={terminerAtelier}
-        />
+        <EnCoursTableau ateliers={ateliersActifs} />
       )}
 
       {/* ===== ARCHIVES ===== */}
@@ -985,22 +949,11 @@ const STATUT_LABELS: Record<string, string> = {
   termine: 'Terminé',
 }
 
-function EnCoursTableau({
-  ateliers, pilotAtelierId, isFacilitateur,
-  onChangeAtelier, onChangeStatut, onSaveSynthese, onTerminer,
-}: {
-  ateliers: AtelierDetail[]
-  pilotAtelierId: number | null
-  isFacilitateur: boolean
-  onChangeAtelier: (id: number) => void
-  onChangeStatut: (atelierId: number, statut: string) => Promise<void> | void
-  onSaveSynthese: (atelierId: number, fields: Record<string, unknown>) => Promise<void> | void
-  onTerminer: (atelierId: number) => Promise<void> | void
-}) {
+function EnCoursTableau({ ateliers }: { ateliers: AtelierDetail[] }) {
   if (ateliers.length === 0) {
     return (
       <section className="atelier-section encours-vue">
-        <h2>Atelier en cours</h2>
+        <h2>Ateliers en cours</h2>
         <div className="encours-vide">
           <p className="encours-vide-titre">Aucun atelier prêt à piloter.</p>
           <p className="encours-vide-aide">
@@ -1012,48 +965,51 @@ function EnCoursTableau({
     )
   }
 
-  const atelier = ateliers.find(a => a.id === pilotAtelierId) ?? ateliers[0]
-
   return (
     <section className="atelier-section encours-vue">
-      <h2>Atelier en cours</h2>
-
-      {ateliers.length > 1 && (
-        <div className="encours-onglets" role="tablist" aria-label="Ateliers à piloter">
-          {ateliers.map(a => (
-            <button
-              key={a.id}
-              type="button"
-              role="tab"
-              aria-selected={a.id === atelier.id}
-              className={`encours-onglet${a.id === atelier.id ? ' encours-onglet--actif' : ''}`}
-              onClick={() => onChangeAtelier(a.id)}
-            >
-              <span className="encours-onglet-num">#{a.numero}</span>
-              <span className={`encours-statut-pastille encours-statut-pastille--${a.statut}`} />
-              {a.date_atelier && (
-                <span className="encours-onglet-date">
-                  {new Date(a.date_atelier).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <EnCoursPilote
-        key={atelier.id}
-        atelier={atelier}
-        isFacilitateur={isFacilitateur}
-        onChangeStatut={onChangeStatut}
-        onSaveSynthese={onSaveSynthese}
-        onTerminer={onTerminer}
-      />
+      <h2>Ateliers en cours</h2>
+      <p className="section-intro">Cliquez sur un atelier pour l'ouvrir : corpus, avancement, projection et synthèse.</p>
+      <div className="atelier-tuiles">
+        {ateliers.map(a => (
+          <AtelierTuile key={a.id} atelier={a} />
+        ))}
+      </div>
     </section>
   )
 }
 
-function EnCoursPilote({ atelier, isFacilitateur, onChangeStatut, onSaveSynthese, onTerminer }: {
+/** Tuile d'atelier (vue « en cours ») : carte cliquable vers la page atelier. */
+function AtelierTuile({ atelier }: { atelier: AtelierDetail }) {
+  const nbSources = atelier.sources.length
+  const apercus = atelier.sources.filter(s => s.image_url).slice(0, 4)
+  return (
+    <Link to={`/atelier/${atelier.id}`} className="atelier-tuile">
+      <div className="atelier-tuile-tete">
+        <span className="atelier-tuile-num">Atelier #{atelier.numero}</span>
+        <span className={`encours-statut encours-statut--${atelier.statut}`}>
+          {STATUT_LABELS[atelier.statut] ?? atelier.statut}
+        </span>
+      </div>
+      {apercus.length > 0 && (
+        <div className="atelier-tuile-apercus">
+          {apercus.map(s => (
+            <img key={s.id} src={s.image_url as string} alt="" loading="lazy" />
+          ))}
+        </div>
+      )}
+      <dl className="atelier-tuile-faits">
+        <div><dt>Date</dt><dd>{atelier.date_atelier
+          ? new Date(atelier.date_atelier).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'long' })
+          : 'à fixer'}{atelier.heure ? ` · ${atelier.heure}` : ''}</dd></div>
+        <div><dt>Lieu</dt><dd>{atelier.lieu || 'à préciser'}</dd></div>
+        <div><dt>Sources</dt><dd>{nbSources}</dd></div>
+      </dl>
+      <span className="atelier-tuile-ouvrir">Ouvrir l'atelier →</span>
+    </Link>
+  )
+}
+
+export function EnCoursPilote({ atelier, isFacilitateur, onChangeStatut, onSaveSynthese, onTerminer }: {
   atelier: AtelierDetail
   isFacilitateur: boolean
   onChangeStatut: (atelierId: number, statut: string) => Promise<void> | void
@@ -1149,7 +1105,7 @@ function EnCoursPilote({ atelier, isFacilitateur, onChangeStatut, onSaveSynthese
       {/* ---- Corpus en cartes ---- */}
       <div className="encours-corpus">
         <div className="encours-corpus-tete">
-          <h3>Corpus à promener</h3>
+          <h3>Corpus sélectionné</h3>
           <span className="encours-corpus-compte">{nbSources} source{nbSources > 1 ? 's' : ''}</span>
         </div>
         {nbSources === 0 ? (
